@@ -25,3 +25,28 @@ func TestSingleCallingCode(t *testing.T) {
 		t.Fatalf("expected +93 656445445, got %s", result)
 	}
 }
+func TestMultipleCallingCode(t *testing.T) {
+	stub := stubClient{payload: client.CountryPayload{Data: []client.CountryRecord{{Name: "India", CallingCodes: []string{"93", "91"}}}}}
+	svc := NewDirectoryService(stub)
+	result, err := svc.GetPhoneNumbers("India", "6783929381")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result != "+91 6783929381" {
+		t.Fatalf("expected +91 6783929381, got %s", result)
+	}
+}
+
+func TestUnknowCountry(t *testing.T) {
+	stub := stubClient{payload: client.CountryPayload{Data: []client.CountryRecord{{Name: "Ind", CallingCodes: []string{}}}}}
+	svc := NewDirectoryService(stub)
+	result, err := svc.GetPhoneNumbers("Ind", "6783929381")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result != "-1" {
+		t.Fatalf("expected -1, got %s", result)
+	}
+}

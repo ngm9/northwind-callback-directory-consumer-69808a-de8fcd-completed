@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 
+	"northwind/callbackdirectory/response"
 	"northwind/callbackdirectory/service"
 )
 
@@ -16,13 +19,28 @@ func NewHandler(svc *service.DirectoryService) *Handler {
 
 func (h *Handler) PhoneNumbers(w http.ResponseWriter, r *http.Request) {
 	country := r.URL.Query().Get("country")
-	phone := r.URL.Query().Get("phone")
-	resolved, err := h.svc.GetPhoneNumbers(country, phone)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if country == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response.BuildResponseBody(http.StatusBadRequest, nil, errors.New("country is blank, please provide a valid input")))
 		return
 	}
-	w.Write([]byte(resolved))
+
+	phone := r.URL.Query().Get("phone")
+	if phone == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response.BuildResponseBody(http.StatusBadRequest, nil, errors.New("phone is blank, please provide a valid input")))
+		return
+	}
+
+	resolved, err := h.svc.GetPhoneNumbers(country, phone)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response.BuildResponseBody(http.StatusBadRequest, nil, errors.New("phone is blank, please provide a valid input")))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response.BuildResponseBody(http.StatusOK, &resolved, nil))
 }
 
 func (h *Handler) Routes() *http.ServeMux {

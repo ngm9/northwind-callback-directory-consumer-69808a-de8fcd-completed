@@ -17,7 +17,18 @@ func (s *DirectoryService) GetPhoneNumbers(country string, phone string) (string
 	if err != nil {
 		return "", err
 	}
-	record := payload.Data[0]
-	callingCode := record.CallingCodes[0]
+
+	callingCode := "-1"
+	if len(payload.Data) > 0 {
+		record := payload.Data[0]
+		if len(record.CallingCodes) > 0 {
+			callingCode = record.CallingCodes[len(record.CallingCodes)-1]
+		}
+	}
+
+	if callingCode == "-1" {
+		return callingCode, nil
+	}
+
 	return "+" + callingCode + " " + phone, nil
 }
